@@ -1,0 +1,130 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<meta charset="utf-8"> 
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<title>charts</title> 
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
+
+
+<!-- Latest compiled JavaScript -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.js" integrity="sha256-QWo7LDvxbWT2tbbQ97B53yJnYU3WhH/C8ycbRAkjPDc=" crossorigin="anonymous"></script>
+
+
+<!-- Latest Chartjs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js" type="text/javascript"></script> 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script> 
+
+
+</head> 
+<body class="container-fluid"> 
+  <br>
+<!--Here Graph Will Be Showing On Index Page-->
+<form name="myForm" id="myForm">
+<div class="form-group">
+    From  Date:- <input type="text" name="startDate" id="startDate"/> To Date: <input type="text" name="endDate" id="endDate"/>
+</div>
+    <input type="submit" onsubmit() value="Submit"/>
+</form>
+<br><br>
+<div>
+<canvas id="myChartline"></canvas>
+</div>
+</body>
+<script>        
+                            chartIt();
+                                const Temperature = [];
+                                const Humidity = [];
+                                const DateTime = [];  
+                                //console.log(DateTime,Temperature,Humidity);
+                                //let dt = moment(DateTime).format('MMMM DD YYYY HH:mm');                                  
+                                //let dt = moment("02-01-2019", "YYYY-MM-DD  HH:mm");
+// 2020-12-04T14:05:31+05:30  output: "3 months ago | February 1, 2019"
+                            async function chartIt(){ 
+                                    await fetchdata();        
+                                const ctx = document.getElementById('myChartline').getContext('2d');
+                                window.myLine = new Chart(ctx, {
+                                    type: 'line',
+                                    data:{
+                                    labels: DateTime,
+                                    datasets: [{
+                                    label: 'Temperature',
+                                    fill: false,
+                                    borderColor: 'rgb(255, 159, 64)',
+                                    backgroundColor: 'rgb(255, 159, 64)',
+                                    borderWidth:1,
+                                    yAxisID: 'left-y-axis',
+                                    data: Temperature,
+                                },
+                                { 
+                                    label: 'Humidity',
+                                    fill: false,
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'rgb(75, 192, 192)',
+                                    borderWidth:1,
+                                    yAxisID: 'right-y-axis',
+                                    data: Humidity,
+                                }],
+                                },
+                                    options: {
+                                    responsive: true,
+                                    hoverMode: 'index',
+                                    stacked: false,
+                                    title: {
+                                    display: true,
+                                    text: 'Temperature & Humidity',
+                                       },
+                                    scales:{
+                                    yAxes: [{
+                                    id : 'left-y-axis',
+                                    type : 'linear',
+                                    display:true,
+                                    ticks: {
+                                    beginAtZero: true
+                                },
+                                    position: 'left',
+                                    gridLines:{
+                                        drawOnChartArea: false,
+                                    },
+                                }, {
+                                    id: 'right-y-axis',
+                                    display: true,
+                                    type: 'linear',
+                                    ticks: {
+                                    beginAtZero: true
+                                },
+                                    position: 'right',
+                                    gridLines:{
+                                        drawOnChartArea: false,
+                                    },
+                                }]
+                                }
+                            }
+                            });window.myLine.update();
+                            }
+                      
+                      async function fetchdata(){              
+                        const response = await fetch('http://127.0.0.1:8000/data/api/');
+                        const data = await response.json();
+                        data.push(dataData);  
+                        }setInterval(fetchdata,10000);      
+                        const dataData =[];                        
+                        //const array = document.querySelectorAll('#myForm input')
+                        console.log(dataData);
+                        
+                        for (i=0;i<data.length;i++){
+                            const yleft = data[i].temperature;
+                            Temperature.push(yleft);
+                            const yright = data[i].humidity;
+                            Humidity.push(yright);
+                            const yymmdd = data[i].date_time.slice(0,10);
+                            const times = data[i].date_time.slice(11,16);
+                            const date_time= yymmdd + " " + times;
+                            DateTime.push(date_time);
+                            }
+                                                                       
+</script>
+</html> 

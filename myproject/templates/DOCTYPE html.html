@@ -1,0 +1,533 @@
+<!DOCTYPE html> 
+<html lang="en" dir="ltr"> 
+
+<head> 
+<meta charset="utf-8"> 
+<title>charts</title> 
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> 
+
+<!-- jQuery library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script> 
+
+<!-- Latest compiled JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> 
+</head> 
+<body class="container-fluid"> 
+<center class="row"> 
+  
+</center> 
+
+<button onclick="getMax(0)">1D</button>
+<button onclick="getMax(7)">1W</button>
+<button onclick="getMax(30)">1M</button>
+<button onclick="getMax(122)">4M</button>
+
+<hr /> 
+<div class="row"> 
+  <div class="col-md-6"> 
+  <canvas id="myChartline"></canvas> 
+  </div> 
+  <div class="col-md-6"> 
+  <canvas id="myChartBar"></canvas> 
+  </div> 
+</div> 
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script> 
+
+
+<script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.11.2/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+
+
+<script> 
+//569e1d80d24
+
+
+
+
+
+function getMax(val){
+   //var b=parseInt(val)
+   //console.log(typeof b);
+  var a=parseInt(val)
+   console.log( a);
+
+   //return day_data
+/////current date
+  var todaysDate = new Date();
+  function convertDate(date) {
+      var yyyy = date.getFullYear().toString();
+      var mm = (date.getMonth()+1).toString();
+      var dd  = date.getDate().toString();
+
+      var mmChars = mm.split('');
+      var ddChars = dd.split('');
+
+    return yyyy + '-' + (mmChars[1]?mm:"0"+mmChars[0]) + '-' + (ddChars[1]?dd:"0"+ddChars[0]);
+     }
+
+//// before 7 day
+    var ourDate = new Date();
+    ourDate.setDate(ourDate.getDate() - a);
+    var finalDate = ourDate.getFullYear()+'-'+ (ourDate.getMonth()+1) +'-'+ourDate.getDate();
+    console.log( finalDate);
+
+
+    var range_client = 
+    {
+        tag_id:"c8738a28cff7",
+        username:"AGYA",
+        password:"RTMSAPP",
+        start_date: finalDate,
+        start_time: "04:07:14",
+        end_date: convertDate(todaysDate),
+        end_time: "06:07:14"
+    }
+
+  var endpoint_range = '/fetchdataforrange'; 
+
+
+  var feedback =$.ajax({ 
+      url: endpoint_range, 
+      contentType: "application/json",
+      data: JSON.stringify(range_client),
+      method: "POST", 
+      success: function(data) { 
+
+        drawLineGraph(data, 'myChartBar'); 
+   // drawBarGraph(data, 'myChartBar'); 
+        console.log("drawing"); 
+        //console.log(data); 
+      }, 
+      complete:function(data){
+        setTimeout(fetchdata,5000);
+      },
+      error: function(error_data) { 
+        console.log(error_data);  } 
+      })
+
+
+  function drawLineGraph(data, id) { 
+    var object_data = data.data; 
+
+    
+    var Temprature = [ ];
+    var Humidity = [ ];
+    var time = [ ];
+    var date= [];
+    Temprature.splice(0,Temprature.length);
+    Humidity.splice(0,Humidity.length)
+    time.splice(0,time.length)
+    date.splice(0,date.length)
+  //var chartLabel = data.chartLabel; 
+  for (var i=0;i<object_data.length;i++){
+
+    Temprature.push(object_data[i].temp);
+    Humidity.push(object_data[i].rh);
+    date.push(object_data[i].date);
+    time.push(object_data[i].time);
+  }
+
+    var time, date;
+
+
+
+// this is removing duplicate dates 
+    result = date.map(((s, i) => v => {
+        if (!s.has(v)) {
+            s.add(v);
+            return v;
+        }
+        while (s.has(i)) ++i;
+        s.add("");
+        return "";
+    })(new Set, 0));
+        
+   console.log(result);
+
+
+
+// here mersing date and time    here date is 'result'
+   var time_date = time.map((e, i) => `${e};${result[i]}`);
+
+    console.log(time_date)
+
+
+
+  //console.log(Temprature); 
+  //console.log(Humidity); 
+  //console.log(Time); 
+ // console.log(Date_); 
+  
+  var ctx = document.getElementById(id).getContext('2d'); 
+  var chart = new Chart(ctx, { 
+    // The type of chart we want to create 
+    type: 'line', 
+    //lineWidth:100,
+    // The data for our dataset 
+    data: { 
+    labels:time_date,
+   
+    datasets: [{ 
+      label: "Temprature", 
+      borderWidth:1,
+      pointStyle: 'cross',
+      yAxisID: 'left-axis',
+      borderColor: 'rgb(55, 99, 132)', 
+      backgroundColor:"rgba(0, 0, 0, 0)",
+      data:Temprature , 
+    },{
+        type:'line',  
+        borderWidth:1,
+        label: 'Humidity',
+        pointStyle: 'cross',
+        fill: false,
+        borderColor: 'rgb(54, 162, 235)',
+        data: Humidity,
+        yAxisID: 'right-axis',
+      }
+    ] 
+    }, 
+
+    // Configuration options go here, 
+    options: {
+      responsive: true,
+
+       legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+                boxWidth: 6,
+            }
+        },
+      animation: {
+            duration: 0 // general animation time
+        },
+
+      
+      title: {display: false},
+      tooltips: {mode: 'index', intersect: false},
+      hover: {mode: 'nearest', intersect: true},
+      scales: {
+        xAxes: [
+
+        {
+          id:'xAxis1',
+          type:"category",
+          display: true,
+            gridLines: {
+            drawTicks:false,
+            display:false,
+            lineWidth:0,
+            color: "rgba(0, 0, 0, 0)"},
+          ticks:{
+            display:true,
+            drawTicks:false,
+            callback:function(label){
+              var time_ = label.split(";")[0];
+              var date_ = label.split(";")[1];
+              return time_ ; },
+              }
+        },
+
+        {
+          id:'xAxis2',
+          display: true,
+          type:"category",
+          gridLines: {
+             display:false,
+             lineWidth:0,
+             color: "rgba(0, 0, 0, 0)"}, 
+          ticks:{
+             display:true, 
+            
+            callback:function(label){
+
+              var date_= label.split(";")[1];  
+              return date_ ;
+          },
+
+ 
+          },
+          // only want the grid lines for one axis to show up
+          }, 
+
+
+    ],
+        yAxes: [{
+          
+          type:'linear',
+          id:'left-axis',
+          display: true,
+          position: 'left',
+          scaleLabel: {display: true, labelString: 'Temperature'},
+          gridLines: {
+                display:false,
+                lineWidth:0,
+                color: "rgba(0, 0, 0, 0)",
+            }
+        },{
+          type:'linear',
+          id:'right-axis',
+          display: true,
+          position: 'right',
+          stacked:false,
+          scaleLabel: {display: true, labelString: 'Humidity'},
+          gridLines: {
+                display:false,
+                lineWidth:0,
+                color: "rgba(0, 0, 0, 0)",
+            }
+        }]
+      } 
+    } 
+
+  }); 
+
+
+
+
+
+
+
+}  }
+
+
+
+
+
+
+
+
+//var client_1 = {
+  //  tag_id:"c8738a28cff7",  //E569E1D80D24
+    //username:"AGYA",
+    //password:"RTMSAPP"
+
+//}
+
+
+//console.log(endpoint);
+ // var username = $('#txtUsername').val();
+  //var password = $('#txtPassword').val();   
+///////////////////////////////////////////////////////
+
+
+
+
+
+
+
+var client = {
+    tag_id:"c8738a28cff7",
+    username:"AGYA",
+    password:"RTMSAPP"
+}
+var endpoint = '/fetchdata'; 
+
+function fetchdata(){
+  var feedback =$.ajax({ 
+      url: endpoint, 
+      contentType: "application/json",
+      data: JSON.stringify(client),
+      method: "POST", 
+      success: function(data) { 
+        drawLineGraph(data, 'myChartline'); 
+   // drawBarGraph(data, 'myChartBar'); 
+        console.log("drawing"); 
+        console.log(data); 
+      }, 
+      complete:function(data){
+        setTimeout(fetchdata,5000);
+      },
+
+       error: function(error_data) { 
+        console.log(error_data);  } 
+      })
+
+
+}
+
+
+$(document).ready(function(){
+ setTimeout(fetchdata,5000);
+});
+
+
+  function drawLineGraph(data, id) { 
+    var object_data = data.data; 
+
+    var Temprature = [ ];
+    var Humidity = [ ];
+    var Time = [ ];
+    var Date_= [];    
+  //var chartLabel = data.chartLabel; 
+  for (var i=0;i<object_data.length;i++){
+
+    if (Time && Time.length > 0) {
+
+   console.log('myArray is not empty.');
+
+  }else{
+
+   console.log('myArray is empty.');
+ 
+  }
+
+
+    Temprature.push(object_data[i].temp);
+    Humidity.push(object_data[i].rh);
+    Time.push(object_data[i].time);
+    Date_.push(object_data[i].date);
+  }
+
+  //console.log(Temprature); 
+  //console.log(Humidity); 
+  //console.log(Time); 
+ // console.log(Date_); 
+  var labels = data.data.time; 
+  var ctx = document.getElementById(id).getContext('2d'); 
+  var chart = new Chart(ctx, { 
+    // The type of chart we want to create 
+    type: 'line', 
+    lineThickness: 1,
+    // The data for our dataset 
+    data: { 
+    labels: Time,Date_ ,
+
+    datasets: [{ 
+      label: "Temprature", 
+      yAxisID: 'left-axis',
+      lineTension:0.5,
+      borderColor: 'rgb(55, 99, 132)', 
+      backgroundColor:"rgba(0, 0, 0, 0)",
+      data:Temprature , 
+    },{
+        type:'line',
+        lineThickness: 0.2,  
+        label: 'Humidity',
+        fill: false,
+        borderColor: 'rgb(54, 162, 235)',
+        data: Humidity,
+        yAxisID: 'right-axis',
+      }
+    ] 
+    }, 
+
+    // Configuration options go here, 
+    options: {
+      responsive: true,
+
+      legend: {
+            display: true,
+          position: 'bottom',
+            labels: {
+                boxWidth: 6,
+            }
+        },
+      animation: {
+            duration: 0 // general animation time
+        },
+      hover: {
+         animationDuration: 0 // duration of animations when hovering an item
+        },
+      responsiveAnimationDuration: 0 ,
+      title: {display: false},
+      tooltips: {mode: 'index', intersect: false},
+      hover: {mode: 'nearest', intersect: true},
+      scales: {
+        xAxes: [
+         {
+          id:'xAxis1',
+          type:"category",
+          gridLines: {
+                color: "rgba(0, 0, 0, 0)",
+            }
+        },
+        {
+          id:'xAxis2',
+          display: false,
+          type:"category",
+          gridLines: {
+          color: "rgba(0, 0, 0, 0)",} // only want the grid lines for one axis to show up
+          }, 
+
+
+],
+        yAxes: [{
+          
+          type:'linear',
+          id:'left-axis',
+          display: true,
+          position: 'left',
+          scaleLabel: {display: true, labelString: 'Temperature'},
+          gridLines: {
+                color: "rgba(0, 0, 0, 0)",
+            }
+        },{
+          type:'linear',
+          id:'right-axis',
+          display: true,
+          position: 'right',
+          stacked:false,
+          scaleLabel: {display: true, labelString: 'Humidity'},
+           gridLines: {
+                color: "rgba(0, 0, 0, 0)",
+            }
+        }]
+      } 
+    } 
+
+  }); 
+
+
+
+
+ chart.render();
+
+  function updateBarGraph(chart, data,data,labels,borderColor,line,label,fill,backgroundColor,yAxisID) {
+  chart.data.datasets.pop(
+  
+  );
+   chart.data.datasets.pop(
+  
+  );
+  chart.data.datasets.push({
+   
+    data:Temprature,
+    borderColor: 'rgb(54, 162, 235)',
+    labels:Time,
+    type:'line',
+    label: 'Temperature',
+    fill:false,
+    yAxisID: 'left-axis'
+    
+  },{
+
+    data:Humidity,
+    borderColor: 'rgb(255, 99, 132)',
+    labels:Time,
+    type:'line',
+    label: 'Humidity',
+    fill:false,
+   
+    yAxisID: 'right-axis'}
+    );
+  chart.update();
+}
+
+
+}
+
+//*Function to update the bar chart*/
+
+/////////////////////////////////////////////////////////
+ 
+
+</script> 
+</body> 
+</html> 
+
